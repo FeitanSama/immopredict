@@ -1,238 +1,278 @@
+# ----------------------------
+#       IMPORTS MODULES
+# ----------------------------
+
+# CUSTOM MODULES
 import utils
 import map
+import data
+
+import os
 import json
 import streamlit as st
 import pydeck as pdk
-import plotly.express as px
 import pandas as pd
-import requests 
-import geopandas as gpd
 import numpy
-import ssl
+import plotly.express as px
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, accuracy_score, classification_report
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.cluster import KMeans
 
-ssl._create_default_https_context = ssl._create_unverified_context
 
+# ----------------------------
+#       PAGE CONFIG
+# ----------------------------
 
-def apidf(url_endpoint, token=None):
-    HEADERS = {
-        "Content-Type": "application/json",
-    }
-    if token:
-        HEADERS["Authorization"] = "Token " + token
-    response = requests.get(
-        url_endpoint,
-        headers=HEADERS,
-    )  
-    if response.status_code == 200:
-      return response.json()
-    return None
-
-def load_page():
-    st.set_page_config(
-        page_title = "Immopredict",             # Page Title
-        page_icon = "app/assets/favicon.png",   # Page Icon 
-        layout = "wide",                        # Page layout 
-        initial_sidebar_state = "auto",         # Sidebar init status
-    )
-
-load_page()
-
-# SIDEBAR SETUP
-input_addresse = st.sidebar.text_input('Adresse', '3 rue waldeck rousseau 946')
-
-option_input = st.sidebar.selectbox(
-    'Type de selection',
-    ('BBOX', 'INSEE'),
-    index=0
+st.set_page_config(
+    page_title = "Immopredict",             # Page Title
+    page_icon = "app/assets/images/favicon.png",   # Page Icon 
+    layout = "wide",                        # Page layout 
+    initial_sidebar_state = "auto",         # Sidebar init status
 )
+cwd = os.getcwd()
 
-with st.sidebar.expander("Autres parametres de recherches"):
+# ----------------------------
+#       SIDEBAR CONFIG
+# ----------------------------
 
-    st.title("ANNEE MUTATION")
-    annee_min, annee_max = st.columns(2)
-    with annee_min:
-        st.number_input('ANNEE MIN')
-    with annee_max:
-        st.number_input('ANNEE MAX')
+st.sidebar.title("PAGES")
 
-    st.title("BBOX")
-    bbox_x, bbox_y = st.columns(2)
-    with bbox_x:
-        st.number_input('BBOX-X')
-    with bbox_y:
-        st.number_input('BBOX-Y')
-    
-    st.title("Surface du Bati")
-    sbati_min, sbati_max = st.columns(2)
-    with sbati_min:
-        st.number_input('SBATI MIN')
-    with sbati_max:
-        st.number_input('SBATI MAX')
+pages = [
+    'ABOUT',
+    'GET DATA',
+    'DASHBOARD',
+    'BUILD ML/DL'
+]
 
-    st.title("Surface du Terrain")
-    sterr_min, sterr_max = st.columns(2)
-    with sterr_min:
-        st.number_input('STERR MIN')
-    with sterr_max:
-        st.number_input('STERR MAX')
+# Page selection
+page = st.sidebar.selectbox('Select a page', pages)
 
-search_button = st.sidebar.button('Search')
+# ----------------------------
+#       ABOUT CONFIG
+# ----------------------------
+if page == 'ABOUT':
+    col1,col2,col3 = st.columns([2,6,2])
+    with col2:
+        st.image('app/assets/images/image.jpg',width=640)
+    st.write("""
 
-    
+Projet Immobilier Intelligent : IMMOPREDICT
 
-# PROCESS START
-if search_button:
-    selected_adresse = utils.get_list_of_adresses(input_addresse,1)['features'][0]['properties']['label']
-    adresse_info = utils.get_info_of_specific_adresse(selected_adresse)
+Notre projet révolutionnaire allie les capacités du machine learning et du deep learning en Python pour créer une plateforme novatrice de visualisation 3D et de prédiction des prix immobiliers. En exploitant les données de l'API des Déclarations de Valeurs Foncières (DVF), notre modèle analyse les tendances du marché et les caractéristiques des quartiers, permettant aux vendeurs de fixer des prix compétitifs et aux acheteurs de prendre des décisions éclairées.
 
-    x = adresse_info['features'][0]['geometry']['coordinates'][0]
-    y = adresse_info['features'][0]['geometry']['coordinates'][1]
-    code_insee = adresse_info['features'][0]['properties']['citycode']
-    nom = adresse_info['features'][0]['properties']['city']
+Points Clés :
 
-    fdf= pd.DataFrame()
-    i = 1
-    while True:
-        map_adds = gpd.read_file(f"https://apidf-preprod.cerema.fr/dvf_opendata/geomutations/?in_bbox={x - 0.007},{y - 0.007},{x + 0.007},{y + 0.007}&page={i}&page_size=15000")
-        fdf = pd.concat([fdf, map_adds])
-        print(i,"-",map_adds.shape[0])
-        i += 1
-        if map_adds.shape[0] < 500:
-            break
+Analyse des Données : Utilisation d'algorithmes de machine learning pour analyser les données historiques des transactions immobilières.
 
-    subs = fdf[fdf['l_codinsee'].str.contains(f'{int(code_insee)}', regex=False)]
+Deep Learning : Intégration de réseaux neuronaux profonds pour extraire des modèles complexes et améliorer la précision des prédictions.
 
-    geojson = pdk.Layer(
-        "GeoJsonLayer",
-        data=subs,
-        opacity=0.4,
-        stroked=False,
-        filled=True,
-        extruded=True,
-        pickable=True,
-        wireframe=True,
-        get_elevation="5",
-        get_fill_color="[51, 153, 255]",
-        get_line_color=[0, 0, 0],
+Visualisation 3D : Création d'une expérience immersive permettant aux utilisateurs d'explorer virtuellement les propriétés et les quartiers.
+
+Prédiction des Prix : Modèles de prédiction basés sur des données spécifiques à chaque bien, offrant aux vendeurs la possibilité de fixer des prix compétitifs et aux acheteurs une évaluation précise des offres.
+
+Avantages : Les vendeurs bénéficient d'une fixation de prix compétitive, tandis que les acheteurs accèdent à des informations détaillées pour des décisions informées.
+
+Ce projet représente une avancée significative, promettant de transformer l'expérience immobilière en offrant transparence, précision, et innovation à l'ensemble du marché immobilier.""")
+
+
+if page == "GET DATA":
+
+    st.sidebar.title('DATA PARAMETERS')
+
+    with st.sidebar.expander("PARAMETERS"):
+
+        option_input = st.selectbox(
+            'Type de selection',
+            ('BBOX', 'INSEE'),
+            index=0
+        )
+
+        if option_input =='BBOX':
+            input_addresse = st.text_input('Adresse', '3 rue waldeck rousseau 946')
+            st.title("BBOX (deg)")
+            st.write("Emprise rectangulaire (via Longitude min,Latitude min,Longitude max,Latitude max). L'emprise demandée ne doit pas excéder un carré de 0.02 deg. x 0.02 deg.")
+            bbox_val = st.number_input('BBOX',value=0.014,min_value = 0.001, max_value = 0.021, step= 0.001, format="%.3f")
+        
+        if option_input =='INSEE':
+            st.title("INSEE")
+            st.write("Code INSEE communal ou d'arrondissement municipal (il est possible d'en demander plusieurs (10 maximum), séparés par des virgules, dans le même département)")
+            insee_val = st.text_input('CODE','94022')
+
+        search_button = st.sidebar.button('Search')
+        m = st.markdown("""
+        <style> 
+            div.stButton > button:first-child {
+                width: 23em;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+    if search_button:
+        
+        f= open("app/data/data.txt","w+")
+        selected_adresse = utils.get_list_of_adresses(input_addresse,1)['features'][0]['properties']['label']
+        f.write(f"{selected_adresse}\n")
+        adresse_info = utils.get_info_of_specific_adresse(selected_adresse)
+        f.write(f"{adresse_info}\n")
+        x = adresse_info['features'][0]['geometry']['coordinates'][0]
+        f.write(f"{x}\n")
+        y = adresse_info['features'][0]['geometry']['coordinates'][1]
+        f.write(f"{y}\n")
+        code_insee = adresse_info['features'][0]['properties']['citycode']
+        f.write(f"{code_insee}\n")
+        nom = adresse_info['features'][0]['properties']['city']
+        f.write(f"{nom}\n")
+        f.close()
+        st.write("Merci d'attendre la fin du chargement pour passer à l'étape suivante")
+
+        if option_input == 'BBOX':
+            st.write("Vous avez choisis la méthode",option_input,"avec l'argument",bbox_val)
+            immodf = data.get_data(option_input,bbox_val,x,y)
+        else:
+            st.write("Vous avez choisis la méthode",option_input,"avec l'argument",insee_val)
+            immodf = data.get_data(option_input,insee_val,0,0)
+        st.success("La dataframe a été enregistré, veuillez changer la page sur PREPROCESS DATA pour modifier les données de votre choix")
+        immodf.to_csv(cwd+"/app/data/out.csv")
+
+if page == "DASHBOARD":
+
+    immodf = pd.read_csv("app/data/out.csv")
+    immo_pred,immo_viz = data.process_data(immodf)
+
+    st.sidebar.title('DATA PARAMETERS')
+
+    with st.sidebar.expander("PARAMETERS"):
+
+        biens_selected = st.multiselect(
+            'Type de selection',
+            immo_viz['libtypbien'].unique(),
+            default = ["UNE MAISON", "UN APPARTEMENT","ACTIVITE"]
+        )
+
+    immo_viz = immo_viz[immo_viz['libtypbien'].isin(biens_selected)]
+
+    f = open("app/data/data.txt", "r")
+    selected_adresse = f.readline()
+    adresse_info = f.readline()
+    x = float(f.readline())
+    y = float(f.readline())
+    code_insee = f.readline()
+    nom = f.readline()
+    f.close()
+
+    st.pydeck_chart(map.get_map(immo_viz,x,y))
+
+    immo_viz["pricem2"] = immo_viz['valeurfonc']/immo_viz['sbati']
+    df = immo_viz.groupby(['anneemut','libtypbien'])['pricem2'].mean().reset_index()
+    fig3 = px.bar(
+        df,
+        x= "anneemut", 
+        y= "pricem2",
+        color="libtypbien", 
+        barmode='group',
+        title = "Evolution annuelle du m2 des logements en fonction de l'annee et du type de bien",
+        labels={"anneemut" : "Année de mutation","pricem2" : "Prix en €/m2",}
     )
+    st.plotly_chart(fig3, use_container_width=True)
 
-    tooltip={
-        'html': """ 
-                <b>Date de mutation :</b> {datemut} <br/>
-                <b>Nature de la mutation :</b> {libnatmut} <br/> 
-                <b>Type/Code du bien :</b> {libtypbien} - {codtypbien}<br/>
-                <b>Prix du bien :</b> {valeurfonc} <br/> 
-                <b>Surface du bati :</b> {sbati} <br/> 
-                <b>Vefa</b> {vefa} <br/> 
-                <b>code insee</b> {l_codinsee}
-                """,
-        'style': {
-            'color': 'white'
-        }
-    }
+    plot, plot1 = st.columns(2)
 
-    st.pydeck_chart(pdk.Deck(
-        map_style="road",
-        initial_view_state=pdk.ViewState(
-            latitude=adresse_info['features'][0]['geometry']['coordinates'][1],
-            longitude=adresse_info['features'][0]['geometry']['coordinates'][0],
-            zoom=17,
-            pitch=50,
-        ),
-        layers=[geojson],
-        tooltip=tooltip
-    ))
-
-    BASE_URL_API = "https://apidf-preprod.cerema.fr"
-
-    url = BASE_URL_API + f"/indicateurs/dv3f/communes/annuel/{code_insee}"
-    url2 = BASE_URL_API + f"/indicateurs/conso_espace/communes/{code_insee}"
-    url3 = BASE_URL_API + f"/dvf_opendata/mutations/?code_insee={code_insee}&page_size=1000&anneemut_min=2018&codtypbien=111"
-
-    response  = apidf(url)
-    indicateurs = pd.DataFrame.from_dict(response["results"])
-
-    response2  = apidf(url2)
-    indicateurs2 = pd.DataFrame.from_dict(response2["results"])
-
-    # Edition du graphique
-    fig = px.bar(indicateurs, 
-                x='annee', 
-                y=['nbtrans_cod111', 'nbtrans_cod121'], 
-                title = f"Evolution annuelle du nombre de ventes de logements individuels à {nom}", 
-                labels={"annee" : "Année de mutation", 
-                        "value" : "Nombre de ventes",},
-                )
-    noms={"nbtrans_cod111": "Maison individuelle", 
-        "nbtrans_cod121": "Appartement individuel"}
-    fig.update_layout(legend_title_text="Nombre de ventes")
-    fig.for_each_trace(lambda t: t.update(hovertemplate = t.hovertemplate.replace(t.name, noms[t.name]), name=noms[t.name]))
-
-    # Edition du graphique
-    fig2 = px.line(indicateurs, 
-                x='annee', 
-                y=['pxm2_median_mmx', 'pxm2_median_amx'], 
-                title = f"Evolution annuelle du prix médian des logements sur {nom}", 
-                range_y=[0, 5500],
-                labels={"annee" : "Année de mutation", 
-                        "value" : "Prix en €/m2",},
-                )
-    noms={"pxm2_median_mmx": "Maison moyenne (entre 90 et 130 m2)", 
-        "pxm2_median_amx": "Appartement ancien (T3 et T4)"}
-    fig2.update_layout(legend_title_text="Prix médian au mètre carré")
-    fig2.for_each_trace(lambda t: t.update(hovertemplate = t.hovertemplate.replace(t.name, noms[t.name]), name=noms[t.name]))
-
-
-
-    fig3 = px.bar(indicateurs2, 
-                x='annee', 
-                y=['naf_arti', "conso_hab",  "conso_act"], 
-                title = f"Evolution annuelle de la consommation d'espaces à {nom}", 
-                labels={"annee" : "Année", 
-                        "value" : "Surface (m2)",},
-                barmode = "group",
-                )
-    noms={"naf_arti": "totale", "conso_act": "liée à l'activité", "conso_hab": "liée à l'habitat"}
-    fig3.update_layout(legend_title_text="Consommation d'espaces")
-    fig3.for_each_trace(lambda t: t.update(hovertemplate = t.hovertemplate.replace(t.name, noms[t.name]), name=noms[t.name]))
-    
-
-    pages = []
-
-    while True:
-        response = apidf(url3) 
-        mutations = pd.DataFrame.from_dict(response["results"])
-        pages.append(mutations)
-        if not response["next"]:
-            break
-        url3 = response["next"]
-
-    # concaténation des pages et affichage graphique
-    mutations = pd.concat(pages)
-    mutations["valeurfonc"] = mutations["valeurfonc"].astype(float)
-    fig4 = px.violin(mutations, 
-                    y="valeurfonc", 
-                    x="anneemut", 
-                    color="anneemut", 
-                    box=True, 
-                    title = f"Distribution annuelle des prix des ventes de maison à partir de 2018 à {nom}", 
-                    labels={"annee" : "Année", 
-                            "valeurfonc" : "Prix en €",},)
-    fig4.update_layout(legend_title_text="Année de mutation")
-
-    graph1_col, graph2_col = st.columns(2)
-
-    with graph1_col: 
+    with plot:
+        df = immo_viz.groupby(['anneemut','libtypbien'])['valeurfonc'].sum().reset_index()
+        fig = px.bar(
+            df,
+            x= "anneemut", 
+            y= "valeurfonc",
+            color="libtypbien", 
+            barmode='group',
+            title = "Cout total des mutations de biens en fonction de l'annee et du type de bien",
+            labels={"anneemut" : "Année de mutation","valeurfonc" : "Prix total en €",}
+        )
         st.plotly_chart(fig, use_container_width=True)
 
-    with graph2_col: 
+    with plot1:
+        df = immo_viz.groupby(['anneemut','libtypbien'])['valeurfonc'].mean().reset_index()
+        fig2 = px.bar(
+            df,
+            x= "anneemut", 
+            y= "valeurfonc",
+            color="libtypbien", 
+            barmode='group',
+            title = "Evolution annuelle du prix moyen des logements en fonction de l'annee et du type de bien",
+            labels={"anneemut" : "Année de mutation","valeurfonc" : "Prix moyen en €",}
+        )
         st.plotly_chart(fig2, use_container_width=True)
 
+    plot2, plot3 = st.columns(2)
 
-    graph3_col, graph4_col = st.columns(2)
-
-    with graph3_col:
-        st.plotly_chart(fig3, use_container_width=True)
-
-    with graph4_col: 
+    with plot2:
+        df = immo_viz.groupby(['libtypbien'])['vefa'].sum().reset_index()
+        fig4 = px.pie(df, values='vefa', names='libtypbien', title='VEFA')
         st.plotly_chart(fig4, use_container_width=True)
+
+    with plot3:
+        df = immo_viz['libtypbien'].value_counts().reset_index()
+        fig5 = px.pie(df, values='libtypbien', names='index', title='REPARTITION DES BIENS')
+        st.plotly_chart(fig5, use_container_width=True)
+
+    immo_pred.to_csv(cwd+"/app/data/pred.csv")
+
+
+if page == 'BUILD ML/DL':
+
+    st.sidebar.title('DATA PARAMETERS')
+
+    with st.sidebar.expander("PARAMETERS"):
+
+        vefa_val = st.number_input("VEFA 0 or 1")
+        nb_par_val = st.number_input("NOMBRE DE PARCELLE 1 par default")
+        nb_par_mut_val = st.number_input("NOMBRE DE PARCELLE MUTATION 0 par default")
+        sterr_val = st.number_input("SURFACE DU TERRAIN")
+        sbati_val = st.number_input("SURFACE DU BATI")
+        nbvolmut_val = st.number_input("NB DE VOLUME PAR MUTATION 0 par default")
+        nblocmut_val = st.number_input("NB DE LOCAUX PAR MUTATION 0 par default")
+        codtypbien_val = st.number_input("CODE DU TYPE DU BIEN (14 ACTIVITE, 121 APPARTEMENT, 111 MAISON, 229 TERRAIN)")
+
+        launch = st.button('Lauch predict')
+
+    data = pd.read_csv("app/data/pred.csv")
+    data.drop(['Unnamed: 0','libnatmut','moismut','jourmut'], axis = 1, inplace = True)
+    data.dropna(inplace=True)
+
+    y = data['valeurfonc']
+    X = data.drop(['valeurfonc'], axis = 1)
+
+    st.dataframe(data)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    pipeline = Pipeline([
+        ('scaler', StandardScaler()),
+        ('regressor', LinearRegression())
+    ])
+
+    pipeline.fit(X_train, y_train)
+
+    # Make predictions on the test set
+    y_pred = pipeline.predict(X_test)
+
+    mse = mean_squared_error(y_test, y_pred)
+    st.write(f'mean square error : {mse}')
+
+    if launch :
+        predict_val = pd.DataFrame({
+            'vefa': vefa_val,
+            'nbpar': nb_par_val,
+            'nbparmut': nb_par_mut_val,
+            'sterr': sterr_val,
+            'nbvolmut': nbvolmut_val,
+            'nblocmut': nblocmut_val,
+            'sbati': sbati_val,
+            'codtypbien': codtypbien_val
+        }, index=[0])
+
+        prix_predits = pipeline.predict(predict_val)
+        st.write(prix_predits[0])

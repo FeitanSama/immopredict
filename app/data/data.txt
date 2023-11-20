@@ -1,0 +1,6 @@
+3 Rue Waldeck Rousseau 94600 Choisy-le-Roi
+{'type': 'FeatureCollection', 'version': 'draft', 'features': [{'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': [2.410588, 48.762301]}, 'properties': {'label': '3 Rue Waldeck Rousseau 94600 Choisy-le-Roi', 'score': 0.9677318181818181, 'housenumber': '3', 'id': '94022_9930_00003', 'name': '3 Rue Waldeck Rousseau', 'postcode': '94600', 'citycode': '94022', 'x': 656674.77, 'y': 6851516.85, 'city': 'Choisy-le-Roi', 'context': '94, Val-de-Marne, Île-de-France', 'type': 'housenumber', 'importance': 0.64505, 'street': 'Rue Waldeck Rousseau'}}], 'attribution': 'BAN', 'licence': 'ETALAB-2.0', 'query': '3 Rue Waldeck Rousseau 94600 Choisy-le-Roi', 'limit': 1}
+2.410588
+48.762301
+94022
+Choisy-le-Roi

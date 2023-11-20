@@ -1,0 +1,43 @@
+# TO DO : 
+
+
+
+ABOUT -> DATA RETRIVE -> VISUALISATION -> BUILD ALGO -> VIEW RESULTS
+
+DATA RETRIVE
+- ajouter tout les parametres pour les requetes
+ - (BBOX OR INSEE)
+
+
+DATA CLEAN 
+
+        # st.title("ANNEE MUTATION")
+        # annee_min, annee_max = st.columns(2)
+        # with annee_min:
+        #     annee_min_val = st.number_input('ANNEE MIN',step=1,min_value=2010,max_value=2023)
+        # with annee_max:
+        #     annee_max_val = st.number_input('ANNEE MAX',step=1,min_value=annee_min_val,max_value=2023)
+        
+        # st.title("SURFACE DU BATIE (m²)")
+        # sbatie_min, sbatie_max = st.columns(2)
+        # with sbatie_min:
+        #     sbatie_min_val = st.number_input('SBATI MIN')
+        # with sbatie_max:
+        #     sbatie_max_val = st.number_input('SBATI MAX')
+
+        # st.title("SURFACE DU TERRAIN (m²)")
+        # sterr_min, sterr_max = st.columns(2)
+        # with sterr_min:
+        #     sterr_min_val = st.number_input('STERR MIN')
+        # with sterr_max:
+        #     sterr_max_val = st.number_input('STERR MAX')
+
+
+
+- faire les requetes modulaires
+- deplacer graphs dans graph.py
+- deplacer map dans map.py
+- conditions affichage des plots etc ... 
+- ajouter pipeline ml
+- github
+- publier serveur
