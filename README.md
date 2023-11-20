@@ -27,11 +27,3 @@ Finir par lancer la session web via streamlit
 ```
 streamlit run app/app.py
 ```
-
-### WEB VERSION
-
-Il faut lancer la page web via l'url suivante : 
-
-```
-https://www.charlesfisman.com:255
-```
